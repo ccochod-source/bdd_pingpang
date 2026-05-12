@@ -70,6 +70,7 @@ export interface ExternalRankingInput {
     source: DataSource;
     rankingValue?: number | null;
     rank?: number | null;
+    totalPlayers?: number | null;
 }
 /**
  * Given a list of available external rankings, pick the best one and

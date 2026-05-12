@@ -1,4 +1,4 @@
-import { PrismaClient, Match, DataSource, ValidationStatus } from "@prisma/client";
+import { PrismaClient, Match, PgrDataSource, PgrValidationStatus } from "@prisma/client";
 import type { SetScore } from "@ping-pang/pgr-core";
 export interface CreateMatchData {
     playerAId: string;
@@ -9,14 +9,14 @@ export interface CreateMatchData {
     setsDetail?: SetScore[];
     playedAt: Date;
     competitionId?: string;
-    source: DataSource;
+    source: PgrDataSource;
     importId?: string;
 }
 export interface GetMatchesOptions {
     from?: Date;
     to?: Date;
-    validationStatus?: ValidationStatus;
-    source?: DataSource;
+    validationStatus?: PgrValidationStatus;
+    source?: PgrDataSource;
     limit?: number;
 }
 export declare class MatchesService {

@@ -1,12 +1,17 @@
-import { PrismaClient, PgrSnapshot, DataSource, SnapshotTrigger } from "@prisma/client";
+import { PrismaClient, PgrSnapshot, PgrDataSource, PgrSnapshotTrigger, Prisma } from "@prisma/client";
 import type { RatingUpdate } from "@ping-pang/pgr-core";
+export type SnapshotWithPlayer = Prisma.PgrSnapshotGetPayload<{
+    include: {
+        player: true;
+    };
+}>;
 export interface CreateSnapshotData {
     playerId: string;
     ratingUpdate: RatingUpdate;
-    initializationSource?: DataSource;
+    initializationSource?: PgrDataSource;
     algorithmVersion: string;
     snapshotDate: Date;
-    trigger: SnapshotTrigger;
+    trigger: PgrSnapshotTrigger;
 }
 export declare class SnapshotsService {
     private readonly prisma;
@@ -24,10 +29,11 @@ export declare class SnapshotsService {
     getLatestSnapshotsForPlayers(playerIds: string[]): Promise<Map<string, PgrSnapshot>>;
     /**
      * Leaderboard: top N players by rating, optionally filtered by country.
+     * Returns snapshots with player info included.
      */
     getLeaderboard(options?: {
         limit?: number;
         countryCode?: string;
-    }): Promise<PgrSnapshot[]>;
+    }): Promise<SnapshotWithPlayer[]>;
 }
 //# sourceMappingURL=snapshots.service.d.ts.map

@@ -59,11 +59,10 @@ class SnapshotsService {
     }
     /**
      * Leaderboard: top N players by rating, optionally filtered by country.
+     * Returns snapshots with player info included.
      */
     async getLeaderboard(options = {}) {
         const { limit = 100, countryCode } = options;
-        // Get latest snapshot per player using a raw subquery approach:
-        // Fetch all, deduplicate by player_id keeping highest rating (latest date).
         const rows = await this.prisma.pgrSnapshot.findMany({
             where: {
                 player: countryCode ? { country_code: countryCode } : undefined,
@@ -71,7 +70,7 @@ class SnapshotsService {
             include: { player: true },
             orderBy: { snapshot_date: "desc" },
         });
-        // Deduplicate: keep only the latest per player
+        // Deduplicate: keep only the latest snapshot per player
         const seen = new Set();
         const latest = [];
         for (const row of rows) {
@@ -80,7 +79,6 @@ class SnapshotsService {
                 latest.push(row);
             }
         }
-        // Sort by rating descending, take top N
         return latest
             .sort((a, b) => b.rating - a.rating)
             .slice(0, limit);

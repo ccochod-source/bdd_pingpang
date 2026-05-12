@@ -76,6 +76,23 @@ class PlayersService {
         return this.prisma.player.findMany({ where: { country_code: countryCode } });
     }
     /**
+     * Add an external ranking entry for a player.
+     * Used before initializePlayer() to seed source data.
+     */
+    async addExternalRanking(playerId, data) {
+        return this.prisma.externalRanking.create({
+            data: {
+                player_id: playerId,
+                source: data.source,
+                ranking_value: data.rankingValue,
+                rank: data.rank,
+                ranked_at: data.rankedAt,
+                confidence_level: data.confidenceLevel,
+                import_id: data.importId,
+            },
+        });
+    }
+    /**
      * Get a player's external rankings, ordered by most recent first.
      * Useful to determine which source should initialize their PGR.
      */

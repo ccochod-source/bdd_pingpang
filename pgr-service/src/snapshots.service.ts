@@ -12,6 +12,14 @@ export type SnapshotWithPlayer = Prisma.PgrSnapshotGetPayload<{
   include: { player: true };
 }>;
 
+export interface LeaderboardOptions {
+  limit?: number;
+  countryCode?: string;
+  gender?: string;
+  category?: string;
+  initializationSource?: PgrDataSource;
+}
+
 export interface CreateSnapshotData {
   playerId: string;
   ratingUpdate: RatingUpdate;
@@ -87,18 +95,22 @@ export class SnapshotsService {
   }
 
   /**
-   * Leaderboard: top N players by rating, optionally filtered by country.
+   * Leaderboard: top N players by rating, with optional filters.
    * Returns snapshots with player info included.
    */
-  async getLeaderboard(options: {
-    limit?: number;
-    countryCode?: string;
-  } = {}): Promise<SnapshotWithPlayer[]> {
-    const { limit = 100, countryCode } = options;
+  async getLeaderboard(options: LeaderboardOptions = {}): Promise<SnapshotWithPlayer[]> {
+    const { limit = 100, countryCode, gender, category, initializationSource } = options;
+
+    const playerFilter = {
+      ...(countryCode !== undefined && { country_code: countryCode }),
+      ...(gender !== undefined && { gender }),
+      ...(category !== undefined && { category }),
+    };
 
     const rows = await this.prisma.pgrSnapshot.findMany({
       where: {
-        player: countryCode ? { country_code: countryCode } : undefined,
+        ...(Object.keys(playerFilter).length > 0 && { player: playerFilter }),
+        ...(initializationSource !== undefined && { initialization_source: initializationSource }),
       },
       include: { player: true },
       orderBy: { snapshot_date: "desc" },

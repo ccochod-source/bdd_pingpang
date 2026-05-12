@@ -26,7 +26,7 @@ import {
 
 import { PlayersService, CreatePlayerData, AddExternalRankingData } from "./players.service.js";
 import { MatchesService, CreateMatchData } from "./matches.service.js";
-import { SnapshotsService } from "./snapshots.service.js";
+import { SnapshotsService, LeaderboardOptions } from "./snapshots.service.js";
 
 export class PgrService {
   constructor(
@@ -73,7 +73,7 @@ export class PgrService {
    * Global or per-country leaderboard, sorted by rating descending.
    * Each entry includes player info + publicDisplay.
    */
-  async getLeaderboard(options: { countryCode?: string; limit?: number } = {}) {
+  async getLeaderboard(options: LeaderboardOptions = {}) {
     const snapshots = await this.snapshotsService.getLeaderboard(options);
     return snapshots.map((s) => ({
       ...s,

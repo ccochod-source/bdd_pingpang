@@ -165,9 +165,12 @@ function initFromBestAvailableSource(rankings) {
     const best = sorted[0];
     switch (best.source) {
         case "WTT":
-        case "ITTF":
             if (best.rank)
                 return initFromWTT({ rank: best.rank, points: best.rankingValue ?? undefined });
+            break;
+        case "ITTF":
+            if (best.rank)
+                return initFromITTF({ rank: best.rank, points: best.rankingValue ?? undefined });
             break;
         case "TTR":
             if (best.rankingValue)
@@ -178,8 +181,13 @@ function initFromBestAvailableSource(rankings) {
                 return initFromFFTT({ points: best.rankingValue });
             break;
         default:
-            if (best.rank)
-                return initFromRank({ rank: best.rank, source: best.source });
+            if (best.rank) {
+                return initFromRank({
+                    rank: best.rank,
+                    totalPlayers: best.totalPlayers ?? undefined,
+                    source: best.source,
+                });
+            }
             if (best.rankingValue) {
                 // Treat as Elo-like and scale toward 1500
                 const pgr = 1500 + (best.rankingValue - 1500) * 0.8;

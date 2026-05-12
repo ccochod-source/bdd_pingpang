@@ -13,6 +13,8 @@
     "db:views": "prisma db execute --file prisma/views.sql --schema prisma/schema.prisma",
     "db:test-queries": "tsx prisma/test-queries.ts",
     "test:flow": "tsx prisma/flow-test.ts",
+    "import:csv": "tsx scripts/import-csv.ts",
+    "check:leaderboard": "tsx scripts/check-leaderboard.ts",
     "test": "vitest run"
   },
   "dependencies": {

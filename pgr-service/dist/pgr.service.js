@@ -19,6 +19,89 @@ class PgrService {
         this.matchesService = matchesService;
         this.snapshotsService = snapshotsService;
     }
+    // ── Player management ─────────────────────────────────────────────────────
+    async createPlayer(data) {
+        return this.playersService.create(data);
+    }
+    async addExternalRanking(playerId, data) {
+        return this.playersService.addExternalRanking(playerId, data);
+    }
+    // ── Read queries ──────────────────────────────────────────────────────────
+    /**
+     * Current PGR for one player: latest snapshot + player info + public display.
+     * Returns null if the player doesn't exist.
+     *
+     * publicDisplay: ready-to-use presentation object for the frontend.
+     *   - { visible: false, label: "En évaluation" }  when matchCount < 3
+     *   - { visible: true, rating, label, confidenceStatus } otherwise
+     * The internal rating is always preserved in `snapshot` regardless.
+     */
+    async getCurrentRating(playerId) {
+        const [player, snapshot] = await Promise.all([
+            this.playersService.findById(playerId),
+            this.snapshotsService.getLatestSnapshot(playerId),
+        ]);
+        if (!player)
+            return null;
+        const publicDisplay = snapshot
+            ? (0, pgr_core_1.getPublicRatingDisplay)(snapshot.rating, snapshot.match_count)
+            : (0, pgr_core_1.getPublicRatingDisplay)(0, 0);
+        return { player, snapshot, publicDisplay };
+    }
+    /**
+     * Global or per-country leaderboard, sorted by rating descending.
+     * Each entry includes player info + publicDisplay.
+     */
+    async getLeaderboard(options = {}) {
+        const snapshots = await this.snapshotsService.getLeaderboard(options);
+        return snapshots.map((s) => ({
+            ...s,
+            publicDisplay: (0, pgr_core_1.getPublicRatingDisplay)(s.rating, s.match_count),
+        }));
+    }
+    /**
+     * Full PGR history for one player, most recent first.
+     * Each snapshot carries its own publicDisplay at the time it was created.
+     */
+    async getPlayerHistory(playerId, limit) {
+        const [player, history] = await Promise.all([
+            this.playersService.findById(playerId),
+            this.snapshotsService.getPlayerHistory(playerId, limit),
+        ]);
+        return {
+            player,
+            history: history.map((s) => ({
+                ...s,
+                publicDisplay: (0, pgr_core_1.getPublicRatingDisplay)(s.rating, s.match_count),
+            })),
+        };
+    }
+    // ── Match lifecycle ────────────────────────────────────────────────────────
+    /**
+     * Record a new match. Status starts as PENDING.
+     */
+    async createMatch(data) {
+        return this.matchesService.create(data);
+    }
+    /**
+     * Confirm a pending match. Once confirmed it will be included in the next
+     * rating period processing.
+     */
+    async confirmMatch(matchId) {
+        return this.matchesService.confirm(matchId);
+    }
+    /**
+     * Process all CONFIRMED matches in a date window and update PGR snapshots.
+     * Defaults to all time if no window is provided.
+     *
+     * @param options.since  - only include matches from this date (inclusive)
+     * @param options.until  - only include matches up to this date (inclusive)
+     */
+    async processConfirmedMatches(options = {}) {
+        const from = options.since ?? new Date(0);
+        const to = options.until ?? new Date();
+        return this.processRatingPeriod(from, to, "MATCH_BATCH");
+    }
     // ── Initialization ────────────────────────────────────────────────────────
     /**
      * Initialize a player's PGR from their external rankings.
@@ -154,8 +237,10 @@ class PgrService {
             orderedIds.push(pid);
         }
         const updates = (0, pgr_core_1.calculateRatingPeriod)(inputs);
-        // Persist snapshots
-        const snapshotDate = periodEnd;
+        // Persist snapshots — use current time so snapshot_date ordering is correct.
+        // periodEnd is the conceptual period boundary; the actual recalculation
+        // timestamp is what matters for "get latest snapshot" queries.
+        const snapshotDate = new Date();
         await Promise.all(updates.map((update, i) => this.snapshotsService.createSnapshot({
             playerId: orderedIds[i],
             ratingUpdate: update,

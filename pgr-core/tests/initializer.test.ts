@@ -182,4 +182,27 @@ describe("initFromBestAvailableSource", () => {
     ]);
     expect(result?.initializationSource).toBe("FFTT");
   });
+
+  it("ITTF source preserves ITTF as initializationSource (not WTT)", () => {
+    const result = initFromBestAvailableSource([
+      { source: "ITTF", rankingValue: 12152, rank: 1 },
+    ]);
+    expect(result?.initializationSource).toBe("ITTF");
+  });
+
+  it("prefers WTT over ITTF when both are present (WTT has higher priority)", () => {
+    const result = initFromBestAvailableSource([
+      { source: "WTT", rankingValue: 5000, rank: 50 },
+      { source: "ITTF", rankingValue: 12152, rank: 1 },
+    ]);
+    expect(result?.initializationSource).toBe("WTT");
+  });
+
+  it("ITTF and WTT produce same rating but different initializationSource", () => {
+    const ittf = initFromBestAvailableSource([{ source: "ITTF", rankingValue: 6750, rank: 2 }]);
+    const wtt = initFromBestAvailableSource([{ source: "WTT", rankingValue: 6750, rank: 2 }]);
+    expect(ittf?.rating).toBe(wtt?.rating);
+    expect(ittf?.initializationSource).toBe("ITTF");
+    expect(wtt?.initializationSource).toBe("WTT");
+  });
 });
