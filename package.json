@@ -1,0 +1,20 @@
+{
+  "name": "ping-pang",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "pgr-core",
+    "pgr-service"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=pgr-core && npm run build --workspace=pgr-service",
+    "test": "npm run test --workspace=pgr-core",
+    "db:generate": "npm run db:generate --workspace=pgr-service",
+    "db:push": "npm run db:push --workspace=pgr-service",
+    "db:migrate": "npm run db:migrate --workspace=pgr-service",
+    "db:seed": "npm run db:seed --workspace=pgr-service"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

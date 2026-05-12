@@ -1,0 +1,28 @@
+{
+  "name": "@ping-pang/pgr-service",
+  "version": "0.1.0",
+  "description": "PGR application service — Prisma + pgr-core orchestration",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:views": "prisma db execute --file prisma/views.sql --schema prisma/schema.prisma",
+    "db:test-queries": "tsx prisma/test-queries.ts",
+    "test:flow": "tsx prisma/flow-test.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ping-pang/pgr-core": "file:../pgr-core",
+    "@prisma/client": "^5.14.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.14.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  }
+}
